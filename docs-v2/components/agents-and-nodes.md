@@ -23,6 +23,10 @@ Nodes can optionally pull reflections or prior decisions from memory adapters vi
 - Unit tests mock `SessionDataContext` and `ExternalApiGateway` to ensure nodes consume/publish the correct artifacts.
 - E2E tests verify end-to-end decision parity under mocked conditions.
 
+## Implementation Notes
+- Analysis nodes live in `tradingagents/application/nodes/analysis.py` and emit `analysis.*` artifacts.
+- Debate and decision nodes are defined in `tradingagents/application/nodes/debate.py` and operate on the shared context outputs.
+
 ## Related Documents
 - [Final Architecture](../new-architecture/final-architecture.md)
 - [Legacy vs Modern Comparison](../legacy-vs-modern.md)

@@ -1,6 +1,8 @@
 # TradingAgents/graph/setup.py
 
-from typing import Dict, Any
+from __future__ import annotations
+
+from typing import Any, Dict, Optional, TYPE_CHECKING
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, StateGraph, START
 from langgraph.prebuilt import ToolNode
@@ -8,6 +10,9 @@ from langgraph.prebuilt import ToolNode
 from tradingagents.agents import *
 from tradingagents.agents.utils.agent_states import AgentState
 from tradingagents.agents.utils.agent_utils import Toolkit
+
+if TYPE_CHECKING:
+    from tradingagents.infrastructure.external import ExternalApiGateway
 
 from .conditional_logic import ConditionalLogic
 
@@ -27,6 +32,7 @@ class GraphSetup:
         invest_judge_memory,
         risk_manager_memory,
         conditional_logic: ConditionalLogic,
+        gateway: Optional["ExternalApiGateway"] = None,
     ):
         """Initialize with required components."""
         self.quick_thinking_llm = quick_thinking_llm
@@ -39,6 +45,7 @@ class GraphSetup:
         self.invest_judge_memory = invest_judge_memory
         self.risk_manager_memory = risk_manager_memory
         self.conditional_logic = conditional_logic
+        self.gateway = gateway
 
     def setup_graph(
         self, selected_analysts=["market", "social", "news", "fundamentals"]

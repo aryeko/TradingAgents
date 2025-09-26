@@ -21,6 +21,15 @@ from tradingagents.agents.utils.agent_states import (
     RiskDebateState,
 )
 from tradingagents.dataflows.interface import set_config
+from tradingagents.infrastructure.external import build_default_gateway
+from tradingagents.application import (
+    DataBootstrapper,
+    DependencyPlanner,
+    NodeExecutor,
+    TradingSession,
+)
+from tradingagents.application.nodes import default_node_specs
+from tradingagents.domain import SessionDataContext
 
 from .conditional_logic import ConditionalLogic
 from .setup import GraphSetup
@@ -70,7 +79,24 @@ class TradingAgentsGraph:
         else:
             raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
         
-        self.toolkit = Toolkit(config=self.config)
+        self.gateway = build_default_gateway(
+            default_timeout=self.config.get("gateway_default_timeout"),
+            max_retries=self.config.get("gateway_max_retries"),
+            retry_backoff_seconds=self.config.get("gateway_retry_backoff_seconds"),
+        )
+        self.toolkit = Toolkit(config=self.config, gateway=self.gateway)
+        self.bootstrapper = DataBootstrapper()
+        self.bootstrap_context: SessionDataContext | None = None
+        specs = default_node_specs()
+        self._planner = DependencyPlanner(specs)
+        self._executor = NodeExecutor()
+        self.trading_session = TradingSession(
+            bootstrapper=self.bootstrapper,
+            planner=self._planner,
+            executor=self._executor,
+            gateway=self.gateway,
+            node_specs=specs,
+        )
 
         # Initialize memories
         self.bull_memory = FinancialSituationMemory("bull_memory", self.config)
@@ -95,6 +121,7 @@ class TradingAgentsGraph:
             self.invest_judge_memory,
             self.risk_manager_memory,
             self.conditional_logic,
+            gateway=self.gateway,
         )
 
         self.propagator = Propagator()
@@ -158,6 +185,39 @@ class TradingAgentsGraph:
         """Run the trading agents graph for a company on a specific date."""
 
         self.ticker = company_name
+
+        if self.config.get("use_new_runtime", False):
+            session_result = self.trading_session.run(
+                ticker=company_name,
+                as_of=str(trade_date),
+            )
+            self.bootstrap_context = session_result.context
+            artifacts = session_result.context.snapshot()
+            executed = [record.node_id for record in session_result.executed_nodes]
+            final_state = {
+                "session": {
+                    "ticker": company_name,
+                    "as_of": str(trade_date),
+                    "artifacts": artifacts,
+                    "executed_nodes": executed,
+                }
+            }
+            decision = (
+                artifacts.get("risk.assessment")
+                or artifacts.get("decision.trader_plan")
+                or "UNDECIDED"
+            )
+            return final_state, decision
+
+        if self.config.get("use_data_bootstrapper", False):
+            context = SessionDataContext()
+            self.bootstrapper.bootstrap(
+                context,
+                self.gateway,
+                ticker=company_name,
+                as_of=str(trade_date),
+            )
+            self.bootstrap_context = context
 
         # Initialize state
         init_agent_state = self.propagator.create_initial_state(

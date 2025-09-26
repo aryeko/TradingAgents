@@ -1,9 +1,10 @@
-from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage, AIMessage
-from typing import List
-from typing import Annotated
+from __future__ import annotations
+
+from typing import Annotated, List, Optional, TYPE_CHECKING
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import RemoveMessage
 from langchain_core.tools import tool
+from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage, AIMessage
 from datetime import date, timedelta, datetime
 import functools
 import pandas as pd
@@ -13,6 +14,9 @@ from langchain_openai import ChatOpenAI
 import tradingagents.dataflows.interface as interface
 from tradingagents.default_config import DEFAULT_CONFIG
 from langchain_core.messages import HumanMessage
+
+if TYPE_CHECKING:
+    from tradingagents.infrastructure.external import ExternalApiGateway
 
 
 def create_msg_delete():
@@ -44,9 +48,16 @@ class Toolkit:
         """Access the configuration."""
         return self._config
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, gateway: Optional["ExternalApiGateway"] = None):
         if config:
             self.update_config(config)
+        self._gateway = gateway
+
+    @property
+    def gateway(self) -> Optional["ExternalApiGateway"]:
+        """Return the external API gateway associated with this toolkit, if any."""
+
+        return self._gateway
 
     @staticmethod
     @tool

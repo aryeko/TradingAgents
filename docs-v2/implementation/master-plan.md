@@ -7,11 +7,11 @@ This master plan governs the rollout of the SOLID-aligned architecture described
 | Story | Title | Status | Owner | Validation Summary |
 |-------|-------|--------|-------|--------------------|
 | S1 | Establish Mocked E2E Safety Net | ✅ Done | Core team | `pytest -m e2e` (mocked) |
-| S2 | Define Domain Contracts | ⏳ Pending | Architecture squad | `pytest tests/domain -q`, `pytest -m e2e` |
-| S3 | Introduce External API Gateway | ⏳ Pending | Infrastructure squad | `pytest tests/domain tests/infrastructure -q`, `pytest -m e2e` |
-| S4 | Bootstrap Raw Data via Fetch Nodes | ⏳ Pending | Data platform squad | `pytest tests/domain tests/infrastructure tests/application -q`, `pytest -m e2e` |
-| S5 | Migrate Analysts & Debaters to Graph Nodes | ⏳ Pending | Research agents squad | `pytest tests/application -q`, `pytest -m e2e` |
-| S6 | Implement Planner, Executor, and Session Facade | ⏳ Pending | Runtime squad | `pytest tests/application tests/domain -q`, `pytest -m e2e` |
+| S2 | Define Domain Contracts | ✅ Done | Architecture squad | `pytest tests/domain -q`, `pytest -m e2e` |
+| S3 | Introduce External API Gateway | ✅ Done | Infrastructure squad | `pytest tests/domain tests/infrastructure -q`, `pytest -m e2e` |
+| S4 | Bootstrap Raw Data via Fetch Nodes | ✅ Done | Data platform squad | `pytest tests/domain tests/infrastructure tests/application -q`, `pytest -m e2e` |
+| S5 | Migrate Analysts & Debaters to Graph Nodes | ✅ Done | Research agents squad | `pytest tests/application -q`, `pytest -m e2e` |
+| S6 | Implement Planner, Executor, and Session Facade | ✅ Done | Runtime squad | `pytest tests/application tests/domain -q`, `pytest -m e2e` |
 | S7 | Retire Legacy Toolkit & Interfaces | ⏳ Pending | Core maintainers | `pytest`, `pytest -m e2e` |
 | S8 | Enhance Observability & Documentation | ⏳ Pending | Ops & Docs squad | `pytest`, `pytest -m e2e`, manual doc review |
 

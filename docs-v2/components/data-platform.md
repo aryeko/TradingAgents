@@ -20,6 +20,8 @@ flowchart LR
 - Keep adapters stateless; configuration (API keys, endpoints) injected via environment/config objects.
 - Mock the gateway in tests to ensure deterministic outcomes.
 - Support offline modes by routing to cached datasets.
+- Implementation scaffolding lives in `tradingagents/infrastructure/external/`.
+- Raw data bootstrapping is implemented in `tradingagents/application/bootstrap/bootstrapper.py` using nodes from `tradingagents/application/nodes/data_fetch.py`.
 
 ## Related Documents
 - [Master Plan](../implementation/master-plan.md)

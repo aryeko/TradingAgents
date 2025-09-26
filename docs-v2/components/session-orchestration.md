@@ -29,6 +29,7 @@ sequenceDiagram
 - Add new nodes by defining their `NodeSpec` and registering with the planner.
 - Use feature flags to swap execution engines if required (e.g., legacy LangGraph vs new runtime).
 - Capture execution metrics in the executor to support observability initiatives.
+- Runtime scaffolding lives in `tradingagents/application/` (`planner.py`, `executor.py`, `session.py`).
 
 ## Related Documents
 - [Master Plan](../implementation/master-plan.md)

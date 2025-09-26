@@ -1,5 +1,9 @@
 import os
 
+
+def _env_flag(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
 DEFAULT_CONFIG = {
     "project_dir": os.path.abspath(os.path.join(os.path.dirname(__file__), ".")),
     "results_dir": os.getenv("TRADINGAGENTS_RESULTS_DIR", "./results"),
@@ -19,4 +23,11 @@ DEFAULT_CONFIG = {
     "max_recur_limit": 100,
     # Tool settings
     "online_tools": True,
+    # External API gateway defaults
+    "gateway_default_timeout": 30.0,
+    "gateway_max_retries": 2,
+    "gateway_retry_backoff_seconds": 0.0,
+    # Feature flags
+    "use_data_bootstrapper": _env_flag("USE_DATA_BOOTSTRAPPER"),
+    "use_new_runtime": _env_flag("USE_NEW_RUNTIME"),
 }
