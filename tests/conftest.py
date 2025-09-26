@@ -12,6 +12,9 @@ def mock_runtime(monkeypatch, tmp_path):
     # Lazy import to ensure patches land before usage
     import tradingagents.graph.trading_graph as graph_module
     import tradingagents.graph.signal_processing as signal_module
+    from tradingagents.application.session import SessionResult
+    from tradingagents.application.executor import ExecutionRecord
+    from tradingagents.domain import SessionDataContext
 
     class DummyLLM:
         """Minimal chat model stand-in used across the system."""
@@ -117,6 +120,40 @@ def mock_runtime(monkeypatch, tmp_path):
         signal_module.SignalProcessor,
         "process_signal",
         lambda self, full_signal: "BUY",
+    )
+
+    def fake_session_run(self, *, ticker, as_of, context=None):
+        artifacts = {
+            "session.ticker": ticker,
+            "session.as_of": as_of,
+            "analysis.market_report": "Market momentum remains strong.",
+            "analysis.sentiment_report": "Social sentiment leans positive.",
+            "analysis.news_report": "Macro landscape stable.",
+            "analysis.fundamentals_report": "Balance sheet healthy.",
+            "debate.bull_case": "Bull: Growth prospects solid.",
+            "debate.bear_case": "Bear: Valuation stretched.",
+            "decision.trader_plan": "Trader will ladder entries. FINAL TRANSACTION PROPOSAL: **BUY**",
+            "risk.assessment": "Risk judge confirms FINAL TRANSACTION PROPOSAL: **BUY**",
+            "session.final_message": "Portfolio Manager: proceeding with BUY.",
+        }
+        ctx = SessionDataContext(artifacts)
+        executed = [
+            ExecutionRecord("analysis.market", 1, 0.0),
+            ExecutionRecord("analysis.sentiment", 1, 0.0),
+            ExecutionRecord("analysis.news", 1, 0.0),
+            ExecutionRecord("analysis.fundamentals", 1, 0.0),
+            ExecutionRecord("debate.bull", 1, 0.0),
+            ExecutionRecord("debate.bear", 1, 0.0),
+            ExecutionRecord("decision.trader", 1, 0.0),
+            ExecutionRecord("risk.assessment", 1, 0.0),
+        ]
+        return SessionResult(context=ctx, executed_nodes=executed, plan=[rec.node_id for rec in executed])
+
+    monkeypatch.setattr(
+        graph_module.TradingSession,
+        "run",
+        fake_session_run,
+        raising=False,
     )
 
     # Ensure temp directories exist without touching user space

@@ -19,8 +19,15 @@ def _base_config(tmp_path, **overrides):
 
 
 @pytest.mark.e2e
-def test_trading_graph_propagate_returns_buy_signal(mock_runtime, tmp_path):
-    config = _base_config(tmp_path, online_tools=False)
+@pytest.mark.parametrize("use_new_runtime", [False, True])
+def test_trading_graph_propagate_returns_buy_signal(
+    mock_runtime, tmp_path, use_new_runtime
+):
+    config = _base_config(
+        tmp_path,
+        online_tools=False,
+        use_new_runtime=use_new_runtime,
+    )
 
     graph = TradingAgentsGraph(selected_analysts=["market"], debug=False, config=config)
     final_state, decision = graph.propagate("AAPL", "2024-06-30")
@@ -43,8 +50,15 @@ def test_trading_graph_propagate_returns_buy_signal(mock_runtime, tmp_path):
         ("openrouter", "gpt-4o-mini", "gpt-4o-mini", "https://openrouter.ai/api/v1"),
     ],
 )
+@pytest.mark.parametrize("use_new_runtime", [False, True])
 def test_trading_graph_supports_multiple_llm_providers(
-    mock_runtime, tmp_path, llm_provider, deep_model, quick_model, backend
+    mock_runtime,
+    tmp_path,
+    llm_provider,
+    deep_model,
+    quick_model,
+    backend,
+    use_new_runtime,
 ):
     config = _base_config(
         tmp_path,
@@ -53,6 +67,7 @@ def test_trading_graph_supports_multiple_llm_providers(
         quick_think_llm=quick_model,
         backend_url=backend,
         online_tools=False,
+        use_new_runtime=use_new_runtime,
     )
 
     graph = TradingAgentsGraph(selected_analysts=["market"], debug=False, config=config)
@@ -72,8 +87,15 @@ def test_trading_graph_supports_multiple_llm_providers(
     ],
 )
 @pytest.mark.parametrize("online_tools", [False, True])
-def test_trading_graph_handles_analyst_permutations(mock_runtime, tmp_path, analysts, online_tools):
-    config = _base_config(tmp_path, online_tools=online_tools)
+@pytest.mark.parametrize("use_new_runtime", [False, True])
+def test_trading_graph_handles_analyst_permutations(
+    mock_runtime, tmp_path, analysts, online_tools, use_new_runtime
+):
+    config = _base_config(
+        tmp_path,
+        online_tools=online_tools,
+        use_new_runtime=use_new_runtime,
+    )
 
     graph = TradingAgentsGraph(selected_analysts=analysts, debug=False, config=config)
     final_state, decision = graph.propagate("GOOGL", "2024-07-02")
@@ -84,8 +106,15 @@ def test_trading_graph_handles_analyst_permutations(mock_runtime, tmp_path, anal
 
 
 @pytest.mark.e2e
-def test_trading_graph_debug_mode_uses_stream(mock_runtime, tmp_path):
-    config = _base_config(tmp_path, online_tools=False)
+@pytest.mark.parametrize("use_new_runtime", [False, True])
+def test_trading_graph_debug_mode_uses_stream(
+    mock_runtime, tmp_path, use_new_runtime
+):
+    config = _base_config(
+        tmp_path,
+        online_tools=False,
+        use_new_runtime=use_new_runtime,
+    )
 
     graph = TradingAgentsGraph(selected_analysts=["market"], debug=True, config=config)
     final_state, decision = graph.propagate("AMZN", "2024-07-03")

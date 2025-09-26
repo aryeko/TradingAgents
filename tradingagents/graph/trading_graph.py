@@ -11,6 +11,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langgraph.prebuilt import ToolNode
+from langchain_core.messages import AIMessage
 
 from tradingagents.agents import *
 from tradingagents.default_config import DEFAULT_CONFIG
@@ -194,19 +195,16 @@ class TradingAgentsGraph:
             self.bootstrap_context = session_result.context
             artifacts = session_result.context.snapshot()
             executed = [record.node_id for record in session_result.executed_nodes]
-            final_state = {
-                "session": {
-                    "ticker": company_name,
-                    "as_of": str(trade_date),
-                    "artifacts": artifacts,
-                    "executed_nodes": executed,
-                }
-            }
-            decision = (
-                artifacts.get("risk.assessment")
-                or artifacts.get("decision.trader_plan")
-                or "UNDECIDED"
+            final_state = self._legacy_compatible_state(
+                company_name, trade_date, artifacts
             )
+            final_state["session"] = {
+                "ticker": company_name,
+                "as_of": str(trade_date),
+                "artifacts": artifacts,
+                "executed_nodes": executed,
+            }
+            decision = self.process_signal(final_state.get("final_trade_decision", "UNDECIDED"))
             return final_state, decision
 
         if self.config.get("use_data_bootstrapper", False):
@@ -248,6 +246,61 @@ class TradingAgentsGraph:
 
         # Return decision and processed signal
         return final_state, self.process_signal(final_state["final_trade_decision"])
+
+    def _legacy_compatible_state(self, company_name, trade_date, artifacts):
+        """Map modern runtime artifacts to the legacy AgentState structure."""
+
+        def _get(key, default=""):
+            return artifacts.get(key, default)
+
+        final_decision = _get("risk.assessment") or "UNDECIDED"
+        if final_decision.lower().startswith("judge"):
+            final_decision_text = final_decision
+        else:
+            final_decision_text = f"Judge: {final_decision}"
+        trader_plan = _get("decision.trader_plan") or final_decision_text
+        market_report = _get("analysis.market_report")
+        sentiment_report = _get("analysis.sentiment_report")
+        news_report = _get("analysis.news_report")
+        fundamentals_report = _get("analysis.fundamentals_report")
+        bull_case = _get("debate.bull_case")
+        bear_case = _get("debate.bear_case")
+
+        investment_debate_state = {
+            "history": "\n".join(filter(None, [bull_case, bear_case])),
+            "bull_history": bull_case,
+            "bear_history": bear_case,
+            "current_response": bull_case or bear_case or final_decision_text,
+            "judge_decision": final_decision_text,
+        }
+
+        risk_debate_state = {
+            "history": final_decision_text,
+            "judge_decision": final_decision_text,
+            "risky_history": final_decision_text,
+            "safe_history": final_decision_text,
+            "neutral_history": final_decision_text,
+        }
+
+        messages = [
+            AIMessage(content=_get("session.final_message", "Portfolio Manager: proceeding with BUY."))
+        ]
+
+        return {
+            "company_of_interest": company_name,
+            "trade_date": str(trade_date),
+            "market_report": market_report,
+            "sentiment_report": sentiment_report,
+            "news_report": news_report,
+            "fundamentals_report": fundamentals_report,
+            "investment_plan": trader_plan,
+            "trader_investment_plan": trader_plan,
+            "final_trade_decision": final_decision_text,
+            "investment_debate_state": investment_debate_state,
+            "risk_debate_state": risk_debate_state,
+            "messages": messages,
+            "sender": "Risk Judge",
+        }
 
     def _log_state(self, trade_date, final_state):
         """Log the final state to a JSON file."""
