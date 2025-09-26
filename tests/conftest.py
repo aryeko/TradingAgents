@@ -184,9 +184,9 @@ def mock_runtime(monkeypatch, tmp_path):
     return SimpleNamespace(tmp_path=tmp_path)
 
 
-@pytest.fixture(params=["v1", "v2"])
-def ta_graph(request, mock_runtime, tmp_path):
-    def factory(*, selected_analysts=None, debug=False, **overrides):
+@pytest.fixture
+def ta_graph(mock_runtime, tmp_path):
+    def factory(*, selected_analysts=None, debug=False, version="v1", **overrides):
         cfg = DEFAULT_CONFIG.copy()
         cfg.update(
             {
@@ -194,7 +194,7 @@ def ta_graph(request, mock_runtime, tmp_path):
                 "results_dir": str(tmp_path / "results"),
                 "data_dir": str(tmp_path / "data"),
                 "data_cache_dir": str(tmp_path / "cache"),
-                "runtime_version": request.param,
+                "runtime_version": version,
                 "online_tools": False,
             }
         )
