@@ -62,4 +62,4 @@ graph LR
 - **Stakeholder Alignment**: Schedule demos after each modernization milestone to maintain confidence and gather feedback.
 
 ## 7. Recommendation
-Adopt the modern architecture in phases aligned with the modernization plan. The initial investment in new abstractions and tests is offset by long-term velocity, reliability, and the ability to iterate on advanced features (strategy simulation, live trading hooks, explainability) without rewriting core orchestration.
+Adopt the modern architecture in phases aligned with the [modernization plan](./implementation/modernization-plan.md). The initial investment in new abstractions and tests is offset by long-term velocity, reliability, and the ability to iterate on advanced features (strategy simulation, live trading hooks, explainability) without rewriting core orchestration.

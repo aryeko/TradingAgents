@@ -140,4 +140,4 @@ The `ExternalApiGateway` abstracts outbound communication:
 - Keep domain entities pure; infrastructure-specific logic belongs in adapters or gateway interceptors.
 
 ## 10. Roadmap Alignment
-This architecture underpins the modernization plan outlined in `docs/new-architecture/modernization-plan.md`. Each milestone incrementally migrates legacy components while keeping the new contracts stable and test-backed.
+This architecture underpins the modernization plan outlined in `../implementation/modernization-plan.md`. Each milestone incrementally migrates legacy components while keeping the new contracts stable and test-backed.
