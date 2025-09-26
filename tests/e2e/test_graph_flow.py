@@ -1,28 +1,12 @@
 import pytest
 
 from tradingagents.default_config import DEFAULT_CONFIG
-from tradingagents.graph.trading_graph import TradingAgentsGraph
-
-
-def _base_config(tmp_path, **overrides):
-    config = DEFAULT_CONFIG.copy()
-    config.update(
-        {
-            "project_dir": str(tmp_path),
-            "results_dir": str(tmp_path / "results"),
-            "data_dir": str(tmp_path / "data"),
-            "data_cache_dir": str(tmp_path / "cache"),
-        }
-    )
-    config.update(overrides)
-    return config
+import pytest
 
 
 @pytest.mark.e2e
-def test_trading_graph_propagate_returns_buy_signal(mock_runtime, tmp_path):
-    config = _base_config(tmp_path, online_tools=False)
-
-    graph = TradingAgentsGraph(selected_analysts=["market"], debug=False, config=config)
+def test_trading_graph_propagate_returns_buy_signal(ta_graph):
+    graph = ta_graph()
     final_state, decision = graph.propagate("AAPL", "2024-06-30")
 
     assert decision == "BUY"
@@ -44,18 +28,14 @@ def test_trading_graph_propagate_returns_buy_signal(mock_runtime, tmp_path):
     ],
 )
 def test_trading_graph_supports_multiple_llm_providers(
-    mock_runtime, tmp_path, llm_provider, deep_model, quick_model, backend
+    ta_graph, llm_provider, deep_model, quick_model, backend
 ):
-    config = _base_config(
-        tmp_path,
+    graph = ta_graph(
         llm_provider=llm_provider,
         deep_think_llm=deep_model,
         quick_think_llm=quick_model,
         backend_url=backend,
-        online_tools=False,
     )
-
-    graph = TradingAgentsGraph(selected_analysts=["market"], debug=False, config=config)
     final_state, decision = graph.propagate("MSFT", "2024-07-01")
 
     assert decision == "BUY"
@@ -72,10 +52,8 @@ def test_trading_graph_supports_multiple_llm_providers(
     ],
 )
 @pytest.mark.parametrize("online_tools", [False, True])
-def test_trading_graph_handles_analyst_permutations(mock_runtime, tmp_path, analysts, online_tools):
-    config = _base_config(tmp_path, online_tools=online_tools)
-
-    graph = TradingAgentsGraph(selected_analysts=analysts, debug=False, config=config)
+def test_trading_graph_handles_analyst_permutations(ta_graph, analysts, online_tools):
+    graph = ta_graph(selected_analysts=analysts, online_tools=online_tools)
     final_state, decision = graph.propagate("GOOGL", "2024-07-02")
 
     assert decision == "BUY"
@@ -84,10 +62,8 @@ def test_trading_graph_handles_analyst_permutations(mock_runtime, tmp_path, anal
 
 
 @pytest.mark.e2e
-def test_trading_graph_debug_mode_uses_stream(mock_runtime, tmp_path):
-    config = _base_config(tmp_path, online_tools=False)
-
-    graph = TradingAgentsGraph(selected_analysts=["market"], debug=True, config=config)
+def test_trading_graph_debug_mode_uses_stream(ta_graph):
+    graph = ta_graph(debug=True)
     final_state, decision = graph.propagate("AMZN", "2024-07-03")
 
     assert decision == "BUY"

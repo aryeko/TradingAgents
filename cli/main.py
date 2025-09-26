@@ -20,7 +20,7 @@ from rich import box
 from rich.align import Align
 from rich.rule import Rule
 
-from tradingagents.graph.trading_graph import TradingAgentsGraph
+from tradingagents.api import get_graph
 from tradingagents.default_config import DEFAULT_CONFIG
 from cli.models import AnalystType
 from cli.utils import *
@@ -391,6 +391,10 @@ def update_display(layout, spinner_text=None):
     layout["footer"].update(Panel(stats_table, border_style="grey50"))
 
 
+def select_runtime_version():
+    return typer.prompt("", default="v1").lower()
+
+
 def get_user_selections():
     """Get all user selections before starting the analysis display."""
     # Display ASCII art welcome message
@@ -424,6 +428,14 @@ def get_user_selections():
         if default:
             box_content += f"\n[dim]Default: {default}[/dim]"
         return Panel(box_content, border_style="blue", padding=(1, 2))
+
+    # Step 0: Runtime version
+    console.print(
+        create_question_box(
+            "Step 0: Runtime Version", "Choose runtime version: v1 or v2", "v1"
+        )
+    )
+    runtime_version = select_runtime_version()
 
     # Step 1: Ticker symbol
     console.print(
@@ -481,11 +493,12 @@ def get_user_selections():
     selected_deep_thinker = select_deep_thinking_agent(selected_llm_provider)
 
     return {
+        "runtime_version": runtime_version,
         "ticker": selected_ticker,
         "analysis_date": analysis_date,
         "analysts": selected_analysts,
         "research_depth": selected_research_depth,
-        "llm_provider": selected_llm_provider.lower(),
+        "llm_provider": selected_llm_provider,
         "backend_url": backend_url,
         "shallow_thinker": selected_shallow_thinker,
         "deep_thinker": selected_deep_thinker,
@@ -737,6 +750,7 @@ def run_analysis():
 
     # Create config with selected research depth
     config = DEFAULT_CONFIG.copy()
+    config["runtime_version"] = selections["runtime_version"]
     config["max_debate_rounds"] = selections["research_depth"]
     config["max_risk_discuss_rounds"] = selections["research_depth"]
     config["quick_think_llm"] = selections["shallow_thinker"]
@@ -745,8 +759,10 @@ def run_analysis():
     config["llm_provider"] = selections["llm_provider"].lower()
 
     # Initialize the graph
-    graph = TradingAgentsGraph(
-        [analyst.value for analyst in selections["analysts"]], config=config, debug=True
+    graph = get_graph(
+        [analyst.value for analyst in selections["analysts"]],
+        config=config,
+        debug=True,
     )
 
     # Create result directory
@@ -804,6 +820,9 @@ def run_analysis():
         update_display(layout)
 
         # Add initial messages
+        message_buffer.add_message(
+            "System", f"Runtime version: {selections['runtime_version']}"
+        )
         message_buffer.add_message("System", f"Selected ticker: {selections['ticker']}")
         message_buffer.add_message(
             "System", f"Analysis date: {selections['analysis_date']}"
