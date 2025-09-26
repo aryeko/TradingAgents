@@ -1,0 +1,1 @@
+It appears there is no data available for the ticker symbol "VFH" in the recent period from August 1, 2025 to September 24, 2025. Could you please confirm if "VFH" is the correct symbol or if you want me to analyze another symbol or a different date range?
